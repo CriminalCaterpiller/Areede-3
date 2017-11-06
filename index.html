@@ -1,0 +1,363 @@
+<html>
+<body>
+<script src = "WE.js"></script>
+<script>
+
+bloodSS = new Image();
+bloodSS.src = "https://opengameart"+
+".org/sites/default/files/blood_hit_07.png";
+
+wpress = false;ipress = false;
+apress = false;jpress = false;
+spress = false;kpress = false;
+dpress = false;lpress = false;
+qpress = false;
+spress = false;esqpress = false;
+mousepress = false;
+mouseX = 0; mouseY = 0;
+spacepress = false;
+
+document.addEventListener("keydown",
+function(e){
+//console.log(e.keyCode);
+if(e.keyCode == 187) fullscreen();
+if(e.keyCode == 87) wpress = true;
+if(e.keyCode == 65) apress = true;
+if(e.keyCode == 83) spress = true;
+if(e.keyCode == 68) dpress = true;
+if(e.keyCode == 38) ipress = true;
+if(e.keyCode == 37) jpress = true;
+if(e.keyCode == 40) kpress = true;
+if(e.keyCode == 39) lpress = true;
+if(e.keyCode == 81) qpress = true;
+if(e.keyCode == 27) esqpress = true;
+if(e.keyCode == 32) spacepress = true;
+});
+
+document.addEventListener("keyup",
+function(e){
+if(e.keyCode == 87) wpress = false;
+if(e.keyCode == 65) apress = false;
+if(e.keyCode == 83) spress = false;
+if(e.keyCode == 68) dpress = false;
+if(e.keyCode == 38) ipress = false;
+if(e.keyCode == 37) jpress = false;
+if(e.keyCode == 40) kpress = false;
+if(e.keyCode == 39) lpress = false;
+if(e.keyCode == 81) qpress = false;
+if(e.keyCode == 27) esqpress = false;
+if(e.keyCode == 32) spacepress = false;
+});
+
+document.onmousedown = function(e){
+if(e.button == 0) mousepress = true;
+}
+
+document.onmouseup = function(e){
+if(e.button == 0) mousepress = false;
+}
+
+document.onmousemove = function(e){
+mouseX=e.clientX; mouseY=e.clientY;
+}
+
+collideRect = function(obj1,obj2){
+if (hitTestRectCoords(
+obj1.x, obj1.y, obj1.w, obj1.h,
+obj2.x, obj2.y, obj2.w, obj2.h)){
+this.xPen = 0;
+this.yPen = 0;
+if (obj1.x<obj2.x){
+xPen = obj1.x + obj1.w - obj2.x;
+}else{
+xPen = obj2.x + obj2.w - obj1.x;
+}
+if (obj1.y<obj2.y){
+yPen = obj1.y + obj1.h - obj2.y;
+}else{
+yPen = obj2.y + obj2.h - obj1.y;
+}
+if (xPen > yPen){
+obj1.yVel = 0;
+if (obj1.y > obj2.y){
+obj1.y += yPen;
+}else{
+obj1.y -= yPen;
+}}else{
+obj1.xVel = 0;
+if (obj1.x > obj2.x){
+obj1.x += xPen;
+}else{
+obj1.x -= xPen;
+}}}
+}
+
+deathDisplay = function(){
+if (this.deathFrame==undefined)
+this.deathFrame = 0;
+if (this.deathFrame<16){
+this.deathFrame+=1;
+frameX = Math.floor(this.deathFrame);
+frameY = 0;
+while (frameX >= 4){
+frameX-=4; frameY++;
+}
+ctx.drawImage(bloodSS,
+frameX*bloodSS.width/4,
+frameY*bloodSS.height/4,
+bloodSS.width/4,
+bloodSS.height/4,
+this.x-this.w*1,this.y-this.h/2,
+this.w+this.w*2,this.h+this.h
+)
+}}
+
+Gravity = function(obj){
+if (obj.xVel>0)obj.xVel*=.8;
+if (obj.xVel<0)obj.xVel*=.8;
+if (obj.xVel>5)obj.xVel = 5;
+if (obj.xVel<-5)obj.xVel = -5;
+if (obj.yVel>15)obj.yVel = 15;
+if (obj.yVel<-15)obj.yVel = -15;
+obj.x+=obj.xVel;
+obj.y+=obj.yVel;
+if (obj.yVel > 15) obj.yVel = 15;
+obj.x+=5;obj.w-=10;obj.y+=11;obj.h-=10;
+if(!room.hitTestObstacles(obj))obj.yVel++;
+obj.x-=5;obj.w+=10;obj.y-=11;obj.h+=10;
+}
+
+Block = function(x,y,w,h){
+this.color = "#ccbb99";
+if (x!=undefined && y!=undefined &&
+w!=undefined && g!=undefined){
+this.x = x; this.y = y;
+this.w = w; this.h = h;
+}else{
+this.x = 0; this.y = 0;
+this.w = 50; this.h = 50;
+}
+this.display = function(){
+ctx.fillStyle = this.color;
+ctx.fillRect(this.x,this.y,this.w+1,this.h+1);
+}}
+
+Player = function(x,y,w,h){
+this.x=400;if(x!=undefined){this.x=x;}
+this.y=400;if(y!=undefined){this.y=y;}
+this.w=25;if(w!=undefined){this.w=w;}
+this.h=25;if(h!=undefined){this.h=h;}
+this.speed=5;this.yVel=0;this.xVel=0;
+this.canJump=false;
+this.update=function(){
+Gravity(this);
+this.canJump = false;
+this.x+=5; this.w-=10; this.y++;
+if(room.hitTestObstacles(this))
+this.canJump=true;
+this.x-=5; this.w+=10; this.y--;
+if(0>Math.floor(Math.abs(this.yVel/2)))
+this.canJump = false;
+if(this.canJump&&wpress)this.yVel=-15;
+if(apress)this.x-=this.speed;
+if(dpress)this.x+=this.speed;
+}
+this.display=function(){
+ctx.fillStyle = "#99ffbb";
+ctx.fillRect(this.x,this.y,this.w,this.h);
+}}
+
+Enemy = function(x,y,w,h){
+this.x=400;if(x!=undefined){this.x=x;}
+this.y=400;if(y!=undefined){this.y=y;}
+this.w=25;if(w!=undefined){this.w=w;}
+this.h=25;if(h!=undefined){this.h=h;}
+this.color = "#afc324";
+this.xVel=0;this.yVel=0;
+this.update = function(){
+Gravity(this);
+}
+this.display=displayEntity;
+}
+
+Projectile = function(x,y,w,h){
+this.x=400;if(x!=undefined){this.x=x;}
+this.y=400;if(y!=undefined){this.y=y;}
+this.w=25;if(w!=undefined){this.w=w;}
+this.h=25;if(h!=undefined){this.h=h;}
+this.xVel=0,this.yVel=0;this.color="#ff3461";
+this.display = displayEntity;
+}
+
+Block = function(x,y,w,h){
+this.x=400;if(x!=undefined){this.x=x;}
+this.y=400;if(y!=undefined){this.y=y;}
+this.w=25;if(w!=undefined){this.w=w;}
+this.h=25;if(h!=undefined){this.h=h;}
+this.color = "#eeeeee";
+this.xVel = 0; this.yVel = 0;
+this.update = function(){
+if (this.xVel>0)this.xVel*=.8;
+if (this.xVel<0)this.xVel*=.8;
+if (this.xVel>5)this.xVel = 5;
+if (this.xVel<-5)this.xVel = -5;
+if (this.yVel>15)this.yVel = 15;
+if (this.yVel<-15)this.yVel = -15;
+this.x+=this.xVel;
+this.y+=this.yVel;
+if (this.yVel > 15) this.yVel = 15;
+this.x+=5;this.w-=10;this.y+=11;this.h-=10;
+if(!room.hitTestObstacles(this))this.yVel++;
+this.x-=5;this.w+=10;this.y-=11;this.h+=10;
+}
+this.display=displayEntity;
+}
+ 
+function getRoom(roomName){
+this.tempRoom = new Room();
+if(roomName == "room1"){
+this.tempRoom.w = 1000;
+this.tempRoom.h = 500;
+this.tempRoom.mousep=0;
+this.tempRoom.player = new Player(400,375);
+this.tempRoom.door = {
+x:800,y:200,w:25,h:50,color:"#333333",
+display:displayEntity
+}
+this.tempRoom.block = new Enemy(500,100,50,50);
+this.tempRoom.obstacles = [
+{x:0,y:400,w:1000-20,h:100,
+color:"#7c36be",display:displayEntity},
+{x:200,y:200,w:250,h:50,
+color:"#b3a569",display:displayEntity},
+{x:0,y:290,w:120,h:110,
+color:"#613a5b",display:displayEntity},
+{x:600,y:250,w:400,h:300,
+color:"#551223",display:displayEntity}
+];
+
+this.tempRoom.entitys = [
+this.tempRoom.obstacles[1],
+this.tempRoom.obstacles[2],
+this.tempRoom.obstacles[3],
+this.tempRoom.obstacles[0],
+this.tempRoom.door,
+this.tempRoom.block,
+this.tempRoom.player
+];
+
+this.tempRoom.projectiles = [];
+
+this.tempRoom.update = function(){
+ctx.fillStyle = "#555555";
+ctx.fillRect(0,0,
+width,height);
+this.player.update();
+this.block.update();
+
+for(i = this.projectiles.length-1; i >= 0; i--){
+
+if (!this.projectiles[i].dead){
+this.projectiles[i].x+=this.projectiles[i].xVel;
+this.projectiles[i].y+=this.projectiles[i].yVel;
+}
+
+if (!hitTestRect(this.projectiles[i],this)||
+this.hitTestObstacles(this.projectiles[i])){
+this.projectiles = removeFromArray(
+this.projectiles[i],this.projectiles);
+}
+
+}
+
+this.collideObstacles(this.block);
+this.collideObstacles(this.player);
+this.border(this.player);
+if (hitTestRect(this.player,this.block)&&
+this.block.dead==undefined&&
+this.block.dead!=true){
+changeRoom(getRoom("room1"));
+this.player.display = deathDisplay;
+}
+cameraX = moveCameraX(this.player,room);
+cameraY = moveCameraY(this.player,room);
+if(hitTestRect(this.player,this.door))
+changeRoom(getRoom("room2"));
+
+if (mousepress && !this.mousep){
+angle = Math.atan2(
+mouseY-(this.player.y+this.player.h/2-cameraY),
+mouseX-(this.player.x+this.player.w/2-cameraX)
+);
+tempEntity = new Projectile();
+tempEntity.x=this.player.x+this.player.w/2-5;
+tempEntity.y=this.player.y+this.player.h/2-5;
+tempEntity.w=10; tempEntity.h=10;
+tempEntity.xVel = Math.cos(angle)*5;
+tempEntity.yVel = Math.sin(angle)*5;
+//console.log(this.entitys.length);
+//console.log(this.entitys);
+this.projectiles=addToArray(
+tempEntity,this.projectiles);
+}
+this.mousep = mousepress;
+if (spress){
+this.block.display = deathDisplay;
+this.block.dead = true;
+this.obstacles = 
+removeFromArray(this.block,this.obstacles);
+}}
+this.tempRoom.display = function(){
+this.displayArray(this.entitys);
+this.displayArray(this.projectiles);
+}
+}
+
+
+else if (roomName == "room2"){
+this.tempRoom.player=new Player(0,0,25,25);
+this.tempRoom.block= new Block(200,100,200,50);
+this.tempRoom.obstacles = [
+{x:0,y:200,w:200,h:50,color:"#d34da3",
+display:displayEntity},
+{x:0,y:400,w:500,h:100,color:"#c77c5b",
+display:displayEntity}
+];
+
+this.tempRoom.entitys = [
+this.tempRoom.block,
+this.tempRoom.obstacles[1],
+this.tempRoom.obstacles[2],
+this.tempRoom.player
+];
+  
+this.tempRoom.update = function(){
+cameraX = 0;
+cameraY = 0;
+ctx.fillStyle = "#555555";
+ctx.fillRect(0,0,c.width,c.height);
+this.player.update();
+this.block.update();
+this.collideObstacles(this.block);
+this.collideObstacles(this.player);
+this.border(this.player);
+if(hitTestRect(this.player,this.block)){
+changeRoom(getRoom("room2"));
+this.player.display=deathDisplay;
+}}}
+return this.tempRoom;
+}
+
+room = getRoom("room1");
+draw = function(){
+GameLoop();
+setTimeout(function(){draw();}, 16);
+}
+draw();
+// or ||
+</script>
+</body>
+</html>
+
+
+
