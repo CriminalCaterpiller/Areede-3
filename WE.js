@@ -44,7 +44,6 @@ displayFade(.05);
 if (fadeAlpha>=1){
 fade = false; room = changingRoom;
 }
-//console.log(fadeAlpha);
 if (!fade && Math.floor(fadeAlpha*10)/10 == 0)
 changing = false;
 }
@@ -141,7 +140,10 @@ displayC.height = screen.height;
 
 displayEntity = function(){
 ctx.fillStyle = this.color;
+if (this.alpha != undefined)
+ctx.globalAlpha = this.alpha;
 ctx.fillRect(this.x,this.y,this.w,this.h);
+ctx.globalAlpha = 1;
 }
 
 function hitTestRectCoords(x1, y1, w1, h1, x2, y2, w2, h2){
