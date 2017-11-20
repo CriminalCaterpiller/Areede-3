@@ -9,10 +9,23 @@ kunaiImage = new Image();
 kunaiImage.src = "https://www.shareicon.net"+
 "/data/128x128/2015/09/20/"+
 "104336_samurai_512x512.png";
+
+spikeImage = new Image();
+
+spikeImage.src = "https://i.kinja-img."+
+"com/gawker-media/image/upload/s--DxqR"+
+"SZsF--/c_scale,fl_progressive,q_80,w_"+
+"800/rvtqkbuhe8wc7hxzufs6.png";
+
 spikeEnemyImage = new Image();
-spikeEnemyImage.src = "http://www.ciaddnews"+
+spikeEnemyImage.src = 
+///*
+"http://www.ciaddnews"+
 ".com/wp-content/uploads/2016/04/urchi"+
 "n_by_yoshigo99-d5cet3p.png";
+//*/
+//"spikeEnemy.png";
+
 wpress = false;ipress = false;
 apress = false;jpress = false;
 spress = false;kpress = false;
@@ -56,21 +69,17 @@ if(e.keyCode == 27) esqpress = false;
 if(e.keyCode == 16) sftpress = false;
 if(e.keyCode == 32) spacepress = false;
 });
-
 document.onmousedown = function(e){
 if(e.button == 0) mousepress = true;
 }
-
 document.onmouseup = function(e){
 if(e.button == 0) mousepress = false;
 }
-
 document.onmousemove = function(e){
 rect = displayC.getBoundingClientRect();
 mouseX=e.clientX-rect.left; 
 mouseY=e.clientY-rect.top;
 }
-
 collideRect = function(obj1,obj2){
 if (hitTestRectCoords(
 obj1.x, obj1.y, obj1.w, obj1.h,
@@ -100,7 +109,6 @@ obj1.x += xPen;
 }else{
 obj1.x -= xPen;
 }}}}
-
 deathDisplay = function(){
 if (this.deathFrame==undefined)
 this.deathFrame = 0;
@@ -120,24 +128,29 @@ this.x-this.w*1,this.y-this.h/2,
 this.w+this.w*2,this.h+this.h
 )
 }}
-
 displaySpikeEnemy = function(){
 ctx.globalAlpha = this.alpha;
 ctx.drawImage(
-spikeEnemyImage,this.x-10,this.y-10,this.w+20,this.h+20
+spikeEnemyImage,
+this.x-10,this.y-10,
+this.w+20,this.h+20
 );
 ctx.globalAlpha = 1;
 }
 
-displayHud = function(){
-ctx.fillStyle = "#666666";
+displayHud = function(projectilesNum, on){
+ctx.globalAlpha = .5;
+ctx.fillStyle = "#888888";
 ctx.beginPath();
 ctx.arc(35,35,30,0,Math.PI*2);
 ctx.fill();
+if (!on) {ctx.globalAlpha = .2;}
+else {ctx.globalAlpha = 1;}
 ctx.drawImage(kunaiImage,15,15,40,40);
+ctx.globalAlpha = 1;
 ctx.fillStyle = "#eeeeee";
 ctx.font = "30px Ariel";
-ctx.fillText(15,27,51)
+ctx.fillText(projectilesNum,40,56)
 }
 
 Gravity = function(obj){
@@ -154,7 +167,6 @@ obj.x+=5;obj.w-=10;obj.y+=11;obj.h-=10;
 if(!room.hitTestObstacles(obj))obj.yVel++;
 obj.x-=5;obj.w+=10;obj.y-=11;obj.h+=10;
 }
-
 Button = function(x,y,w){
 this.x=400;if(x!=undefined){this.x=x;}
 this.y=400;if(y!=undefined){this.y=y;}
@@ -213,8 +225,6 @@ this.color = "#afc324";this.xVel=0;this.yVel=0;
 this.wuzDed = false;this.deathTimer = 0;
 this.deathTime = 200; this.dead = false;
 this.update = function(){
-if (!this.dead)
-Gravity(this);
 if (this.dead && !this.wuzDed){
 this.deathFrame = 0;
 this.display = deathDisplay;
@@ -303,7 +313,6 @@ this.projectiles[p].y-=this.y;
 }
 ctx.globalAlpha = 1;
 }}
-
 Projectile = function(x,y,w,h){
 this.img = kunaiImage;
 this.x=400;if(x!=undefined){this.x=x;}
@@ -336,8 +345,9 @@ this.tr.door = {
 x:750,y:200,w:25,h:50,color:"#333333",
 display:displayEntity
 } 
-this.tr.button = new Button(600,380);
-this.tr.block = new Enemy(605,300,40,40);
+this.tr.enemy = new Enemy(605,320,40,40);
+this.tr.enemy.displayThis = displaySpikeEnemy;
+this.tr.enemy.display = displaySpikeEnemy;
 this.tr.projectiles = new Projectiles();
 this.tr.obstacles = [
 {x:0,y:400,w:800-20,h:100,
@@ -350,7 +360,6 @@ color:"#8888aa",display:displayEntity},
 color:"#8888aa",display:displayEntity},
 {x:400,y:0,w:400,h:150,
 color:"#8888aa",display:displayEntity},
-this.tr.button
 ];
 this.tr.entitys = [
 this.tr.obstacles[0],
@@ -358,9 +367,8 @@ this.tr.obstacles[1],
 this.tr.obstacles[2],
 this.tr.obstacles[3],
 this.tr.obstacles[4],
-this.tr.button,
 this.tr.door,
-this.tr.block,
+this.tr.enemy,
 this.tr.player,
 this.tr.projectiles,
 {x:425,y:150,w:50,h:100,
@@ -375,7 +383,7 @@ ctx.fillStyle = "#555555";
 ctx.fillRect(0,0,
 width,height);
 this.player.update();
-this.block.update();
+this.enemy.update();
 if (this.projectilesOn)
 this.projectiles.update();
 if (sftpress && !this.sftP){
@@ -390,15 +398,12 @@ this.w,this.h,this.obstacles);
 this.projectiles.fire(
 this.player.x+this.player.w/2,
 this.player.y+this.player.h/2);
-if (!this.block.dead &&
-this.projectiles.hit(this.block))
-this.block.dead = true;
-this.button.update();
-this.button.press(this.player);
-this.button.press(this.block);
-this.collideObstacles(this.block);
-place = 10;
-if (this.button.on){
+if (!this.enemy.dead &&
+this.projectiles.hit(this.enemy))
+this.enemy.dead = true;
+this.collideObstacles(this.enemy);
+place = 9;
+if (!this.enemy.dead){
 collideRect(this.player,this.entitys[0+place]);
 this.projectiles.hit(this.entitys[0+place]);
 this.entitys[0+place].alpha = 1;
@@ -415,9 +420,9 @@ this.entitys[2+place].alpha = .5;
 }
 this.collideObstacles(this.player);
 this.border(this.player);
-if (this.block.dead==undefined &&
-this.block.dead!=true &&
-hitTestRect(this.player,this.block)){
+if (this.enemy.dead==undefined &&
+this.enemy.dead!=true &&
+hitTestRect(this.player,this.enemy)){
 changeRoom(getRoom("room1"));
 this.player.display = deathDisplay;
 }
@@ -432,47 +437,76 @@ if (!this.redOn) ctx.globalAlpha = .3;
 this.displayArray(this.projectiles);
 ctx.globalAlpha = 1;
 }}
-
 else if (roomName == "room2"){
-
-this.tr.player = new Player(100,100);
+this.tr.w = 700;
+this.tr.player = new Player(100,375);
 this.tr.enemy1 = new Enemy(250,100,30,30);
-this.tr.enemy1.deathTime = 100;
+this.tr.enemy1.deathTime = 200;
 this.tr.enemy1.displayThis = displaySpikeEnemy;
 this.tr.enemy1.display = displaySpikeEnemy;
 this.tr.enemy2 = new Enemy(250,100,30,30);
-this.tr.enemy2.deathTime = 100;
+this.tr.enemy2.deathTime = 200;
+//this.tr.projectilesNum = 15;
+this.tr.projectilesNum = 20;
 this.tr.enemy2.displayThis = displaySpikeEnemy;
 this.tr.enemy2.display = displaySpikeEnemy;
 this.tr.projectiles = new Projectiles();
 this.tr.enemyProjectiles = new Projectiles();
+this.tr.door = {x:650,y:350,w:25,h:50,color:"#333333",
+display:displayEntity}
 this.tr.obstacles = [
-{x:0,y:400,w:500,h:100,color:"#759087",
+{x:0,y:400,w:700,h:100,color:"#759087",
+display:displayEntity},
+{x:0,y:0,w:180,h:260,color:"#759087",
+display:displayEntity},
+{x:220,y:0,w:730,h:260,color:"#759087",
 display:displayEntity}
 ];
 this.tr.entitys = [
-this.tr.obstacles[0],
+this.tr.door,
 this.tr.player,
+this.tr.projectiles,
+{x:405,y:240,w:40,h:180,color:"#aaaaaa",
+display:displayEntity},
+{x:480,y:240,w:40,h:180,color:"#aaaaaa",
+display:displayEntity},
+this.tr.obstacles[0],
+this.tr.obstacles[1],
+this.tr.obstacles[2],
 this.tr.enemy1,
-this.tr.enemy2,
-this.tr.projectiles
+this.tr.enemy2
 ];
 this.tr.z = 0;
 this.tr.update = function(){
-cameraX = 0;
-cameraY = 0;
 this.z++;
 this.player.update();
 this.enemy1.xVel = 0; this.enemy1.yVel = 0;
 this.enemy2.xVel = 0; this.enemy2.yVel = 0;
 this.enemy1.update();
 this.enemy2.update();
-this.enemy1.x = Math.cos(this.z/60) * 160 + 225;
-this.enemy1.y = Math.sin(this.z/20) * 80 + 125;
-this.enemy2.x = -Math.cos(this.z/60) * 160 + 225;
-this.enemy2.y = Math.sin(-this.z/20) * 80 + 125;
+this.enemy1.x = Math.cos(this.z/90) * 160 + 175;
+this.enemy1.y = Math.sin(this.z/30) * 80 + 125;
+this.enemy2.x = -Math.cos(this.z/90) * 160 + 175;
+this.enemy2.y = Math.sin(-this.z/30) * 80 + 125;
 this.border(this.player);
+place = 3;
+if (this.enemy1.dead){
+this.entitys[0+place].alpha = .5;
+}else{
+this.entitys[0+place].alpha = 1;
+collideRect(this.player,this.entitys[0+place]);
+}
+if (this.enemy2.dead){
+this.entitys[1+place].alpha = .5;
+}else{
+this.entitys[1+place].alpha = 1;
+collideRect(this.player,this.entitys[1+place]);
+}
 this.collideObstacles(this.player);
+cameraX = moveCameraX(this.player,this);
+cameraY = 0;
+if (hitTestRect(this.player,this.door))
+changeRoom(getRoom("room4"));
 if (this.projectilesOn)
 this.projectiles.update();
 if (sftpress && !this.sftP){
@@ -485,35 +519,34 @@ this.sftP = sftpress;
 this.projectiles.remove(
 this.w,this.h,this.obstacles
 );
+if (this.projectilesNum > 0){
+if (mousepress && !this.mousep) this.projectilesNum--;
 this.projectiles.fire(
 this.player.x + this.player.w/2,
 this.player.y + this.player.h/2
 );
+}
+this.mousep = mousepress;
 if (!this.enemy1.dead && 
-this.projectiles.hit(this.enemy1)){
+this.projectiles.hit(this.enemy1))
 this.enemy1.dead = true;
-this.enemy1.display = deathDisplay;
-}
 if (!this.enemy2.dead && 
-this.projectiles.hit(this.enemy2)){
+this.projectiles.hit(this.enemy2))
 this.enemy2.dead = true;
-this.enemy2.display = deathDisplay;
-}
 }
 this.tr.display = function(){
 ctx.fillStyle = "#925542";
 ctx.fillRect(0,0,c.width,c.height);
 this.displayArray(this.entitys);
-displayHud();
+displayHud(this.projectilesNum,this.projectilesOn);
+//displayHud(,this.projectilesOn);
 }
 }
-
 else if (roomName == "room3"){
 this.tr.w = 800;
 this.tr.player = new Player(100,100);
 this.tr.projectiles = new Projectiles();
 this.tr.enemy = new Enemy(555,0,50,50);
-this.tr.button = new Button(550,80,60);
 this.tr.obstacles = [
 {x:0,y:400,w:1000,h:100,color:"#232834",
 display:displayEntity},
@@ -535,9 +568,6 @@ this.tr.obstacles[2],
 this.tr.obstacles[3],
 this.tr.obstacles[4],
 this.tr.obstacles[5],
-//this.tr.obstacles[6],
-this.tr.button,
-this.tr.enemy,
 this.tr.player,
 this.tr.projectiles
 ];
@@ -554,7 +584,6 @@ this.projectilesOn = false; this.projectiles.alpha = .3;
 this.projectilesOn = true; this.projectiles.alpha = 1;
 }}
 this.sftP = sftpress;
-this.button.update();
 this.enemy.update();
 if (!this.enemy.dead &&
 this.projectiles.hit(this.enemy))
@@ -565,15 +594,110 @@ this.player.y+this.player.h/2
 );
 this.projectiles.remove(
 this.w,this.h,this.obstacles);
-this.button.press(this.enemy);
 this.collideObstacles(this.player);
 this.collideObstacles(this.enemy);
 this.border(this.player);
 cameraX = moveCameraX(this.player,this);
 }}
+else if (roomName == "room4"){
+this.tr.w = 700;
+this.tr.player = new Player(250,350);
+this.tr.projectiles = new Projectiles();
+this.tr.enemy = new Enemy(180,25,40,40);
+this.tr.enemy.displayThis = displaySpikeEnemy;
+this.tr.enemy.display = displaySpikeEnemy;
+this.tr.gate = {
+x:450,y:300,w:50,h:150,color:"#aaaaaa",
+display:displayEntity	
+};
+this.tr.door = {
+x:600,y:400,w:25,h:50,color:"#333333",
+display:displayEntity
+};
+this.tr.obstacles = [
+{x:0,y:100,w:316,h:50,color:"#a1c563",
+display:displayEntity},
+{x:500,y:100,w:316,h:50,color:"#a1c563",
+display:displayEntity},
+{x:200,y:220,w:316,h:50,color:"#a1c563",
+display:displayEntity},
+{x:-300,y:220,w:316,h:50,color:"#a1c563",
+display:displayEntity},
+{x:400,y:00,w:300,h:300,color:"#c5a163",
+display:displayEntity},
+{x:0,y:450,w:700,h:50,color:"#c5a163",
+display:displayEntity}
+]
+this.tr.entitys = [
+this.tr.obstacles[0],
+this.tr.obstacles[1],
+this.tr.obstacles[2],
+this.tr.obstacles[3],
+this.tr.obstacles[4],
+this.tr.obstacles[5],
+this.tr.door,
+this.tr.player,
+this.tr.enemy,
+this.tr.projectiles,
+this.tr.gate
+]
+this.tr.update = function(){
+cameraX = moveCameraX(this.player,this);
+cameraY = 0;
+this.player.update();
+this.enemy.update();
+this.border(this.player);
+if (this.obstacles[0].x > 500)
+this.obstacles[0].x = -300;
+if (this.obstacles[1].x > 500)
+this.obstacles[1].x = -300;
+if (this.obstacles[2].x > 500)
+this.obstacles[2].x = -300;
+if (this.obstacles[3].x > 500)
+this.obstacles[3].x = -300;
+this.obstacles[0].x += 3;
+this.obstacles[1].x += 3;
+this.obstacles[2].x += 3;
+this.obstacles[3].x += 3;
+if (this.on){
+this.projectiles.update();
+this.projectiles.alpha = 1;
+}else{
+this.projectiles.alpha = .3;
+}
+if (this.enemy.dead){
+this.gate.alpha = .5;
+}else{
+this.gate.alpha = 1;
+collideRect(this.player,this.gate);
+this.projectiles.hit(this.gate);
+}
+this.projectiles.remove(this.w,this.h,this.obstacles);
+if (!this.enemy.dead && 
+this.projectiles.hit(this.enemy)){
+this.enemy.dead = true; 
+this.enemy.display = deathDisplay;
+}
+if (sftpress && !this.sftp){
+if (this.on){this.on = false;}
+else {this.on = true;}
+}
+this.sftp = sftpress;
+this.collideObstacles(this.player);
+this.projectiles.fire(
+this.player.x + this.player.w/2,
+this.player.y + this.player.h/2
+);
+}
+this.tr.display = function(){
+ctx.fillStyle = "#a46da4";
+ctx.fillRect(0,0,c.width,c.height);
+this.displayArray(this.entitys);
+}
+}
 return this.tr;
 }
-room = getRoom("room2");
+room = getRoom("room3");
 draw = function(){
 GameLoop();
 setTimeout(function(){draw();}, 16);
