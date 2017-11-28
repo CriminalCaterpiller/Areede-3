@@ -9,23 +9,10 @@ kunaiImage = new Image();
 kunaiImage.src = "https://www.shareicon.net"+
 "/data/128x128/2015/09/20/"+
 "104336_samurai_512x512.png";
-
-spikeImage = new Image();
-
-spikeImage.src = "https://i.kinja-img."+
-"com/gawker-media/image/upload/s--DxqR"+
-"SZsF--/c_scale,fl_progressive,q_80,w_"+
-"800/rvtqkbuhe8wc7hxzufs6.png";
-
 spikeEnemyImage = new Image();
-spikeEnemyImage.src = 
-///*
-"http://www.ciaddnews"+
+spikeEnemyImage.src = "http://www.ciaddnews"+
 ".com/wp-content/uploads/2016/04/urchi"+
 "n_by_yoshigo99-d5cet3p.png";
-//*/
-//"spikeEnemy.png";
-
 wpress = false;ipress = false;
 apress = false;jpress = false;
 spress = false;kpress = false;
@@ -35,7 +22,6 @@ sftpress = false;esqpress = false;
 mousepress = false;
 mouseX = 0; mouseY = 0;
 spacepress = false;
-
 document.addEventListener("keydown",
 function(e){
 //console.log(e.keyCode);
@@ -53,7 +39,6 @@ if(e.keyCode == 27) esqpress = true;
 if(e.keyCode == 16) sftpress = true;
 if(e.keyCode == 32) spacepress = true;
 });
-
 document.addEventListener("keyup",
 function(e){
 if(e.keyCode == 87) wpress = false;
@@ -137,7 +122,6 @@ this.w+20,this.h+20
 );
 ctx.globalAlpha = 1;
 }
-
 displayHud = function(projectilesNum, on){
 ctx.globalAlpha = .5;
 ctx.fillStyle = "#888888";
@@ -152,7 +136,6 @@ ctx.fillStyle = "#eeeeee";
 ctx.font = "30px Ariel";
 ctx.fillText(projectilesNum,40,56)
 }
-
 Gravity = function(obj){
 if (obj.xVel>0)obj.xVel*=.8;
 if (obj.xVel<0)obj.xVel*=.8;
@@ -189,7 +172,6 @@ obj.y-=obj.y+obj.h-this.y-1;
 }}
 this.display = displayEntity;
 }
-
 Player = function(x,y,w,h){
 this.x=400;if(x!=undefined){this.x=x;}
 this.y=400;if(y!=undefined){this.y=y;}
@@ -214,7 +196,6 @@ this.display=function(){
 ctx.fillStyle = "#99ffbb";
 ctx.fillRect(this.x,this.y,this.w,this.h);
 }}
-
 Enemy = function(x,y,w,h){
 this.x=400;if(x!=undefined){this.x=x;}
 this.y=400;if(y!=undefined){this.y=y;}
@@ -245,7 +226,6 @@ this.wuzDed = this.dead;
 this.displayThis = displayEntity;
 this.display = this.displayThis;
 }
-
 Projectiles = function(){
 this.x=0;this.y=0;this.alpha = .3;
 this.projectiles = [];
@@ -333,7 +313,19 @@ ctx.rotate(-this.angle+Math.PI*3/4);
 ctx.translate(-this.x-this.w/2,
 -this.y-this.h/2);
 }}
-
+Sheild = function(){
+this.x=0;this.y=0;this.r=30;
+this.active = true;
+this.display = function(){
+ctx.beginPath();
+ctx.fillStyle = "#dddddd";
+if (this.active) ctx.globalAlpha = .5;
+if (!this.active) ctx.globalAlpha = .2;
+ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+ctx.fill();
+ctx.globalAlpha = 1;
+}
+}
 function getRoom(roomName){
 this.tr = new Room();
 if(roomName == "room1"){
@@ -546,7 +538,16 @@ else if (roomName == "room3"){
 this.tr.w = 800;
 this.tr.player = new Player(100,100);
 this.tr.projectiles = new Projectiles();
-this.tr.enemy = new Enemy(555,0,50,50);
+this.tr.gate1 = {x:675,y:325,w:40,h:75,
+color:"#aaaaaa",display:displayEntity};
+this.tr.gate2 = {x:735,y:325,w:40,h:75,
+color:"#aaaaaa",display:displayEntity};
+this.tr.enemy1 = new Enemy(550,20,30,30);
+this.tr.enemy1.display = displaySpikeEnemy;
+this.tr.enemy1.displayThis = displaySpikeEnemy;
+this.tr.enemy2 = new Enemy(550,200,30,30);
+this.tr.enemy2.display = displaySpikeEnemy;
+this.tr.enemy2.displayThis = displaySpikeEnemy;
 this.tr.obstacles = [
 {x:0,y:400,w:1000,h:100,color:"#232834",
 display:displayEntity},
@@ -561,6 +562,8 @@ display:displayEntity},
 {x:650,y:0,w:150,h:325,color:"#232834",
 display:displayEntity}
 ];
+this.tr.sheild = new Sheild();
+this.tr.sheild.r = 27;
 this.tr.entitys = [
 this.tr.obstacles[0],
 this.tr.obstacles[1],
@@ -568,13 +571,37 @@ this.tr.obstacles[2],
 this.tr.obstacles[3],
 this.tr.obstacles[4],
 this.tr.obstacles[5],
+this.tr.enemy1,
+this.tr.enemy2,
 this.tr.player,
-this.tr.projectiles
+this.tr.projectiles,
+this.tr.gate1,
+this.tr.gate2,
+this.tr.sheild
 ];
+this.tr.z = 0;
 this.tr.update = function(){
 ctx.fillStyle = "#975341";
 ctx.fillRect(0,0,c.width,c.height);
+this.z++;
 this.player.update();
+this.enemy2.x=410+Math.cos(this.z/50)*125;
+this.enemy2.y=250+Math.sin(this.z/25)*50;
+this.enemy1.update(); this.enemy2.update();
+this.sheild.x = this.enemy2.x + this.enemy2.w/2;
+this.sheild.y = this.enemy2.y + this.enemy2.h/2;
+if (Math.sin(this.z/20)<-.5){
+this.sheild.active = false;
+}else{
+this.sheild.active = true;
+}
+if (!this.enemy1.dead && 
+this.projectiles.hit(this.enemy1)) 
+this.enemy1.dead = true;
+if (!this.enemy2.dead && 
+this.projectiles.hit(this.enemy2) &&
+!this.sheild.active) 
+this.enemy2.dead = true;
 if (this.projectilesOn)
 this.projectiles.update();
 if (sftpress && !this.sftP){
@@ -584,10 +611,6 @@ this.projectilesOn = false; this.projectiles.alpha = .3;
 this.projectilesOn = true; this.projectiles.alpha = 1;
 }}
 this.sftP = sftpress;
-this.enemy.update();
-if (!this.enemy.dead &&
-this.projectiles.hit(this.enemy))
-this.enemy.dead = true;
 this.projectiles.fire(
 this.player.x+this.player.w/2,
 this.player.y+this.player.h/2
@@ -595,7 +618,6 @@ this.player.y+this.player.h/2
 this.projectiles.remove(
 this.w,this.h,this.obstacles);
 this.collideObstacles(this.player);
-this.collideObstacles(this.enemy);
 this.border(this.player);
 cameraX = moveCameraX(this.player,this);
 }}
@@ -707,3 +729,5 @@ draw();
 </script>
 </body>
 </html>
+
+
